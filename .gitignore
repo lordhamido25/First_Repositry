@@ -35,3 +35,8 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# TrendScope
+trendscope/*.db
+__pycache__/
+.pytest_cache/
