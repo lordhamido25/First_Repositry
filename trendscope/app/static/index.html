@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrendScope</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--fg:#14171f;--mut:#6b7280;--acc:#e11d48;--bd:#e5e7eb}
+@media(prefers-color-scheme:dark){:root{--bg:#0e1116;--card:#171b22;--fg:#e8eaed;--mut:#9aa3af;--bd:#262c36}}
+*{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:var(--bg);color:var(--fg)}
+header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:16px;border-bottom:1px solid var(--bd)}
+h1{margin:0;font-size:20px;flex:1}h2{margin:0 0 8px;font-size:15px}
+button,select{padding:8px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--fg);font:inherit}
+button.p{background:var(--acc);border-color:var(--acc);color:#fff;cursor:pointer}
+main{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px;padding:16px;max-width:1200px;margin:auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:16px;overflow:auto}
+table{width:100%;border-collapse:collapse}td,th{padding:6px 4px;text-align:left;border-bottom:1px solid var(--bd)}
+th{color:var(--mut);font-weight:500;font-size:12px}.n{text-align:right}.bar{height:6px;background:var(--acc);border-radius:3px}
+#msg{color:var(--mut);padding:0 16px}
+</style></head><body>
+<header><h1>TrendScope</h1>
+<select id="pf"><option value="tiktok">TikTok</option><option value="instagram">Instagram Reels</option></select>
+<button class="p" id="rf">Refresh data</button></header>
+<div id="msg"></div><main id="out"></main>
+<script>
+const $=s=>document.querySelector(s), fmt=n=>n>=1e6?(n/1e6).toFixed(1)+"M":n>=1e3?(n/1e3).toFixed(1)+"K":n;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function tbl(title,cols,rows){return `<section class="card"><h2>${title}</h2><table><tr>${cols.map(c=>`<th class="${c[2]||""}">${c[0]}</th>`).join("")}</tr>`+
+ rows.map(r=>`<tr>${cols.map(c=>`<td class="${c[2]||""}">${c[1](r)}</td>`).join("")}</tr>`).join("")+`</table></section>`}
+async function load(){
+  const r=await fetch("/trends/"+$("#pf").value); const d=await r.json();
+  $("#msg").textContent=d.videos_analyzed?d.videos_analyzed+" videos analyzed":"No data yet - click Refresh data.";
+  if(!d.videos_analyzed){$("#out").innerHTML="";return}
+  $("#out").innerHTML=
+   tbl("Top hashtags",[["Hashtag",r=>"#"+esc(r.hashtag)],["Views",r=>fmt(r.views),"n"],["Eng.",r=>(r.avg_engagement*100).toFixed(1)+"%","n"]],d.top_hashtags)+
+   tbl("Rising hashtags (last 3 days)",[["Hashtag",r=>"#"+esc(r.hashtag)],["Growth",r=>"+"+(r.growth*100).toFixed(1)+" pts","n"]],d.rising_hashtags)+
+   tbl("Top sounds",[["Sound",r=>esc(r.sound)],["Videos",r=>r.videos,"n"],["Views",r=>fmt(r.views),"n"]],d.top_sounds)+
+   tbl("Best hours to post (UTC)",[["Hour",r=>r.hour_utc+":00"],["Eng.",r=>(r.avg_engagement*100).toFixed(1)+"%","n"]],d.best_posting_hours)+
+   tbl("Breakout videos",[["Creator",r=>"@"+esc(r.author)],["Views",r=>fmt(r.views),"n"],["x followers",r=>r.virality+"x","n"]],d.breakout_videos);
+}
+$("#pf").onchange=load;
+$("#rf").onclick=async()=>{$("#msg").textContent="Fetching (can take a minute)...";
+  const r=await fetch("/refresh/"+$("#pf").value+"?limit=100",{method:"POST"});
+  if(!r.ok){$("#msg").textContent="Refresh failed: "+(await r.text());return}
+  load()};
+load();
+</script></body></html>

@@ -17,7 +17,20 @@ curl -X POST "localhost:8000/refresh/tiktok?limit=200"   # fetch + store
 curl localhost:8000/trends/tiktok                         # analytics
 ```
 
-It runs on fake data (`MockProvider`) until you add a real provider.
+Open http://127.0.0.1:8000/ for the dashboard. It runs on fake data until you set up Apify:
+
+```bash
+export TRENDSCOPE_PROVIDER=apify
+export APIFY_TOKEN=...                      # Apify console -> Settings -> Integrations
+export TRENDSCOPE_SEED_TAGS=fitness,gymtok  # the niche(s) you want to track
+uvicorn app.main:app
+```
+
+Click **Refresh data**. Each refresh runs Apify actors and costs Apify credits, so keep
+`limit` small while testing. Actors used: `clockworks/tiktok-scraper` and
+`apify/instagram-hashtag-scraper` (change them with `APIFY_*_ACTOR`). The Apify adapter
+is tested against sample payloads only, not live Apify, so check one real refresh and
+adjust `app/providers/apify.py` if an actor's output differs.
 
 ## Data sources (the important decision)
 
@@ -50,7 +63,7 @@ To add one, subclass `app/providers/base.py::Provider` and register it in
 
 ## Roadmap
 
-1. Real provider adapter (start with one, e.g. Apify)
+1. ~~Apify adapter~~ done (needs a live check)
 2. Frontend dashboard (Next.js or plain HTML + charts)
 3. Auth + Stripe billing
 4. Scheduled refresh + trend history (snapshots to compute true velocity)

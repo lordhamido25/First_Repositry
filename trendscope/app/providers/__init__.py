@@ -9,4 +9,8 @@ def get_provider() -> Provider:
     name = os.getenv("TRENDSCOPE_PROVIDER", "mock")
     if name == "mock":
         return MockProvider()
+    if name == "apify":
+        from app.providers.apify import ApifyProvider
+
+        return ApifyProvider()
     raise ValueError(f"Unknown provider {name!r}; implement it in app/providers/")
