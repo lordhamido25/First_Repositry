@@ -13,4 +13,8 @@ def get_provider() -> Provider:
         from app.providers.apify import ApifyProvider
 
         return ApifyProvider()
+    if name == "browser":
+        from app.providers.browser import BrowserProvider
+
+        return BrowserProvider()
     raise ValueError(f"Unknown provider {name!r}; implement it in app/providers/")

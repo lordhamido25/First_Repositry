@@ -45,6 +45,25 @@ $env:TRENDSCOPE_REFRESH_LIMIT="100"   # videos per platform per run (each run co
 
 The server must stay running for this to work. A hosted deployment keeps it running.
 
+## DIY browser provider (personal/learning use, TikTok only)
+
+Reads public TikTok hashtag pages with a headless browser and captures the page's own video-list
+responses. No Apify needed, no logins, no proxies. It stops and reports if TikTok shows a
+CAPTCHA/login wall instead of working around it.
+
+```powershell
+pip install -r requirements-browser.txt
+python -m playwright install chromium
+$env:TRENDSCOPE_PROVIDER="browser"
+$env:TRENDSCOPE_SEED_TAGS="fitness"      # keep this list short
+$env:TRENDSCOPE_HEADLESS="0"             # optional: watch the browser window
+python -m uvicorn app.main:app --reload
+```
+
+Then pick TikTok and click Refresh data (takes ~30s per hashtag). Not tested against live
+TikTok: if it returns nothing or odd numbers, edit `parse_item()` in `app/providers/browser.py`.
+Instagram is not supported here. Keep volumes small and don't run it on a tight schedule.
+
 ## Data sources (the important decision)
 
 Scraping TikTok or Instagram directly violates their terms of service and breaks often,
