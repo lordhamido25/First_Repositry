@@ -28,7 +28,10 @@ async function load(){
   const r=await fetch("/trends/"+$("#pf").value); const d=await r.json();
   $("#msg").textContent=d.videos_analyzed?d.videos_analyzed+" videos analyzed":"No data yet - click Refresh data.";
   if(!d.videos_analyzed){$("#out").innerHTML="";return}
-  $("#out").innerHTML=
+  const hist=d.snapshots<2?`<section class="card"><h2>Growth tracking</h2><p style="color:var(--mut)">Needs at least 2 refreshes at different times (you have ${d.snapshots}). Refresh again later, or set TRENDSCOPE_REFRESH_HOURS to do it automatically.</p></section>`:
+   tbl("Hashtag momentum (views gained, 48h)",[["Hashtag",r=>"#"+esc(r.hashtag)],["Views gained",r=>fmt(r.gain),"n"],["Videos",r=>r.videos,"n"]],d.hashtag_momentum)+
+   tbl("Fastest growing videos",[["Creator",r=>"@"+esc(r.author)],["Views/hour",r=>fmt(r.views_per_hour),"n"],["Gained",r=>fmt(r.gain),"n"]],d.fastest_growing);
+  $("#out").innerHTML=hist+
    tbl("Top hashtags",[["Hashtag",r=>"#"+esc(r.hashtag)],["Views",r=>fmt(r.views),"n"],["Eng.",r=>(r.avg_engagement*100).toFixed(1)+"%","n"]],d.top_hashtags)+
    tbl("Rising hashtags (last 3 days)",[["Hashtag",r=>"#"+esc(r.hashtag)],["Growth",r=>"+"+(r.growth*100).toFixed(1)+" pts","n"]],d.rising_hashtags)+
    tbl("Top sounds",[["Sound",r=>esc(r.sound)],["Videos",r=>r.videos,"n"],["Views",r=>fmt(r.views),"n"]],d.top_sounds)+

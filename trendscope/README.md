@@ -32,6 +32,19 @@ Click **Refresh data**. Each refresh runs Apify actors and costs Apify credits, 
 is tested against sample payloads only, not live Apify, so check one real refresh and
 adjust `app/providers/apify.py` if an actor's output differs.
 
+## Trend history and auto-refresh
+
+Every refresh stores a snapshot of each video's views/likes/comments. With 2+ refreshes at
+different times the dashboard shows **fastest growing videos** and **hashtag momentum**
+(views gained over the last 48h). To refresh automatically while the server runs:
+
+```powershell
+$env:TRENDSCOPE_REFRESH_HOURS="6"     # every 6 hours; unset or 0 = off
+$env:TRENDSCOPE_REFRESH_LIMIT="100"   # videos per platform per run (each run costs Apify credit)
+```
+
+The server must stay running for this to work. A hosted deployment keeps it running.
+
 ## Data sources (the important decision)
 
 Scraping TikTok or Instagram directly violates their terms of service and breaks often,

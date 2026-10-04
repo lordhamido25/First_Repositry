@@ -30,3 +30,30 @@ def test_refresh_then_trends():
 
 def test_bad_platform():
     assert client.get("/trends/youtube").status_code == 400
+
+
+def test_growth_from_snapshots():
+    from datetime import datetime, timedelta, timezone
+
+    from app.storage import Store
+
+    s = Store(":memory:")
+    now = datetime.now(timezone.utc)
+    v = MockProvider().fetch_trending("tiktok", 3)
+    s.save(v, now - timedelta(hours=10))
+    for x in v:
+        x.views += 1000
+    s.save(v, now)
+    g = s.growth("tiktok")
+    assert len(g) == 3 and all(r["gain"] == 1000 and r["views_per_hour"] == 100 for r in g)
+    assert s.snapshot_count("tiktok") == 2
+    assert analytics.fastest_growing(v, g)[0]["gain"] == 1000
+    assert analytics.hashtag_momentum(v, g)
+
+
+def test_single_snapshot_has_no_growth():
+    from app.storage import Store
+
+    s = Store(":memory:")
+    s.save(MockProvider().fetch_trending("tiktok", 3))
+    assert s.growth("tiktok") == []

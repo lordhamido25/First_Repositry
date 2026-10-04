@@ -73,3 +73,24 @@ def best_posting_hours(videos: list[Video], n: int = 5) -> list[dict]:
 
 def breakout_videos(videos: list[Video], n: int = 10) -> list[Video]:
     return sorted(videos, key=virality_score, reverse=True)[:n]
+
+
+def fastest_growing(videos: list[Video], growth: list[dict], n: int = 10) -> list[dict]:
+    """Videos gaining the most views per hour, from snapshot history."""
+    by_id = {v.id: v for v in videos}
+    rows = [{**g, "author": by_id[g["id"]].author, "caption": by_id[g["id"]].caption[:80]}
+            for g in growth if g["id"] in by_id and g["gain"] > 0]
+    return sorted(rows, key=lambda r: r["views_per_hour"], reverse=True)[:n]
+
+
+def hashtag_momentum(videos: list[Video], growth: list[dict], n: int = 10) -> list[dict]:
+    """Hashtags ranked by total views gained by their videos over the window."""
+    gain = {g["id"]: g["gain"] for g in growth}
+    agg: dict[str, dict] = defaultdict(lambda: {"gain": 0, "videos": 0})
+    for v in videos:
+        if v.id in gain and gain[v.id] > 0:
+            for t in set(v.hashtags):
+                agg[t]["gain"] += gain[v.id]
+                agg[t]["videos"] += 1
+    rows = [{"hashtag": t, **a} for t, a in agg.items()]
+    return sorted(rows, key=lambda r: r["gain"], reverse=True)[:n]
